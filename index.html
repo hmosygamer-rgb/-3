@@ -95,6 +95,23 @@
     </nav>
   </div>
 
+  <div class="modal-backdrop" id="permissionOnboarding" hidden>
+    <section class="modal permission-modal" role="dialog" aria-modal="true" aria-labelledby="permissionTitle">
+      <div class="modal-icon permission-hero"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.7 2.8 8.3 7 10 4.2-1.7 7-5.3 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-5"/></svg></div>
+      <p class="eyebrow">إعداد قريب لأول مرة</p>
+      <h2 id="permissionTitle">السماح بالأذونات المطلوبة</h2>
+      <p>حتى يعمل تحديد الموقع والمشاركة وQR بصورة صحيحة، وافق على الأذونات التالية. يمكنك تغييرها لاحقاً من إعدادات الهاتف.</p>
+      <div class="permission-list">
+        <div><span>⌖</span><p><strong>الموقع الدقيق</strong><small>فعّل «استخدام الموقع الدقيق» واختر السماح طوال الوقت</small></p></div>
+        <div><span>▣</span><p><strong>الكاميرا</strong><small>لمسح رموز QR الخاصة بالدعوات فقط</small></p></div>
+        <div><span>♢</span><p><strong>الإشعارات والعمل في الخلفية</strong><small>لإظهار تنبيهات الوصول واستمرار المشاركة</small></p></div>
+      </div>
+      <button class="primary-btn" id="grantAllBtn">السماح وتحديد موقعي بدقة</button>
+      <button class="later-btn" id="permissionsLaterBtn">ليس الآن</button>
+      <small class="consent-copy">لن نستخدم الكاميرا أو الموقع إلا لوظائف التطبيق وبعد موافقتك.</small>
+    </section>
+  </div>
+
   <div class="modal-backdrop" id="modalBackdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <button class="modal-close" id="modalClose" aria-label="إغلاق">×</button>

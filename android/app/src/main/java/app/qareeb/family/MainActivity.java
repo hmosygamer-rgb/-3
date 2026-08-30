@@ -73,6 +73,7 @@ public class MainActivity extends Activity {
         });
         if (state == null) webView.loadUrl("file:///android_asset/index.html");
         else webView.restoreState(state);
+        if (state == null) webView.postDelayed(this::requestRelevantPermissions, 700);
     }
 
     private void openExternal(String url) {

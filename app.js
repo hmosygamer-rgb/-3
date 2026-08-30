@@ -214,14 +214,33 @@ $('#qrImageInput').addEventListener('change', async event => {
   event.target.value = '';
 });
 
-$('#permissionsBtn').addEventListener('click', async () => {
+async function requestPermissionsAndPreciseLocation() {
+  localStorage.setItem('qareeb-permission-onboarding-seen', '1');
+  $('#permissionOnboarding').hidden = true;
   if (window.AndroidApp?.requestAllPermissions) {
+    sessionStorage.setItem('qareeb-awaiting-precise-location', '1');
     window.AndroidApp.requestAllPermissions();
-    toast('وافق على الأذونات، ثم اختر السماح بالموقع طوال الوقت من الإعدادات');
+    toast('فعّل الموقع الدقيق واختر السماح طوال الوقت');
     return;
   }
   if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission().catch(() => {});
   $('#myLocationBtn').click();
+}
+
+function resumePreciseLocation() {
+  if (sessionStorage.getItem('qareeb-awaiting-precise-location') !== '1') return;
+  sessionStorage.removeItem('qareeb-awaiting-precise-location');
+  setTimeout(() => $('#myLocationBtn').click(), 600);
+}
+
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resumePreciseLocation(); });
+window.addEventListener('focus', resumePreciseLocation);
+$('#grantAllBtn').addEventListener('click', requestPermissionsAndPreciseLocation);
+$('#permissionsBtn').addEventListener('click', requestPermissionsAndPreciseLocation);
+$('#permissionsLaterBtn').addEventListener('click', () => {
+  localStorage.setItem('qareeb-permission-onboarding-seen', '1');
+  $('#permissionOnboarding').hidden = true;
+  toast('يمكنك تفعيل الأذونات لاحقاً من بطاقة الأذونات');
 });
 $('#privacyBtn').addEventListener('click', () => toast('الموقع لا يظهر إلا بعد موافقة الشخص بشكل صريح'));
 $('#notificationsBtn').addEventListener('click', () => toast('لا توجد إشعارات جديدة'));
@@ -230,4 +249,7 @@ $('#alertsBtn').addEventListener('click', () => toast('لا توجد تنبيه�
 $('#settingsBtn').addEventListener('click', () => toast('دقة GPS العالية تعمل فقط عند طلب موقعك لتوفير البطارية'));
 
 renderFamily();
+if (!localStorage.getItem('qareeb-permission-onboarding-seen')) {
+  setTimeout(() => { $('#permissionOnboarding').hidden = false; }, 450);
+}
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
