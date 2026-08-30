@@ -6,7 +6,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import java.util.ArrayList;
 import android.view.View;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
@@ -18,6 +21,8 @@ import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
     private static final int LOCATION_REQUEST = 42;
+    private static final int APP_PERMISSIONS_REQUEST = 43;
+    private static final int BACKGROUND_LOCATION_REQUEST = 44;
     private WebView webView;
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
@@ -70,6 +75,8 @@ public class MainActivity extends Activity {
 
     public class AndroidBridge {
         @JavascriptInterface public void openMap(String url) { runOnUiThread(() -> openExternal(url)); }
+        @JavascriptInterface public void requestAllPermissions() { runOnUiThread(() -> requestRelevantPermissions()); }
+        @JavascriptInterface public void openPermissionSettings() { runOnUiThread(() -> openAppSettings()); }
         @JavascriptInterface public void setDark(boolean dark) {
             runOnUiThread(() -> {
                 getWindow().setStatusBarColor(Color.parseColor(dark ? "#101A18" : "#F7F7F2"));
@@ -82,6 +89,29 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void requestRelevantPermissions() {
+        ArrayList<String> permissions = new ArrayList<>();
+        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS);
+        if (!permissions.isEmpty()) requestPermissions(permissions.toArray(new String[0]), APP_PERMISSIONS_REQUEST);
+        else requestBackgroundLocation();
+    }
+
+    private void requestBackgroundLocation() {
+        if (Build.VERSION.SDK_INT < 29 || checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) return;
+        if (Build.VERSION.SDK_INT == 29) requestPermissions(new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, BACKGROUND_LOCATION_REQUEST);
+        else openAppSettings(); // Android 11+ requires choosing “Allow all the time” in app settings.
+    }
+
+    private void openAppSettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
+    }
+
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode == LOCATION_REQUEST && geoCallback != null) {
@@ -91,6 +121,7 @@ public class MainActivity extends Activity {
             geoCallback = null;
             geoOrigin = null;
         }
+        if (requestCode == APP_PERMISSIONS_REQUEST) requestBackgroundLocation();
     }
 
     @Override public void onBackPressed() {

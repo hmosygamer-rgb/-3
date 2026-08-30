@@ -129,6 +129,15 @@ async function shareInvite() {
 
 $('#copyInviteBtn').addEventListener('click', shareInvite);
 $('#shareAgainBtn').addEventListener('click', shareInvite);
+$('#permissionsBtn').addEventListener('click', async () => {
+  if (window.AndroidApp?.requestAllPermissions) {
+    window.AndroidApp.requestAllPermissions();
+    toast('وافق على الأذونات، ثم اختر السماح بالموقع طوال الوقت من الإعدادات');
+    return;
+  }
+  if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission().catch(() => {});
+  $('#myLocationBtn').click();
+});
 $('#privacyBtn').addEventListener('click', () => toast('الموقع لا يظهر إلا بعد موافقة الشخص بشكل صريح'));
 $('#notificationsBtn').addEventListener('click', () => toast('لا توجد إشعارات جديدة'));
 $('#placesBtn').addEventListener('click', () => toast('أضف شخصاً أولاً لإنشاء المناطق الآمنة'));
