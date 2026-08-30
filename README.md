@@ -22,9 +22,9 @@ python3 -m http.server 4173 --bind 0.0.0.0
 - وضع داكن يدوي وتلقائي حسب إعداد الهاتف مع حفظ الاختيار.
 - مشروع Android أصلي خفيف داخل `android/` مع صلاحيات الموقع وفتح الاتجاهات في Google Maps.
 
-## بناء APK
+## ملف APK
 
-يتولى GitHub Actions بناء ملف `Qareeb-Android.apk` تلقائياً. وللبناء محلياً مع JDK 17 وAndroid SDK:
+ملف التثبيت الجاهز موجود في جذر المشروع باسم **`Qareeb.apk`** (موقّع ومتحقق منه بتواقيع APK ‏v1/v2/v3). ولإعادة بناء مشروع Android محلياً مع JDK 17 وAndroid SDK:
 
 ```bash
 cd android
