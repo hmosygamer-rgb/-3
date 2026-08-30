@@ -38,7 +38,7 @@
         <div class="map-search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
           <input id="searchInput" type="search" placeholder="ابحث عن فرد من العائلة" aria-label="ابحث عن فرد" autocomplete="off" />
-          <kbd>٣</kbd>
+          <kbd id="memberCount">٠</kbd>
         </div>
 
         <div class="map-tools">
@@ -46,61 +46,35 @@
           <button class="map-tool location" id="myLocationBtn" aria-label="موقعي"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
         </div>
 
-        <div class="zone-label"><span></span> المنزل · منطقة آمنة</div>
-
-        <button class="person-pin pin-1 active" data-member="sara" style="--x: 55%; --y: 36%" aria-label="سارة">
-          <span class="pulse"></span><span class="avatar avatar-sara">س</span><b>سارة</b>
-        </button>
-        <button class="person-pin pin-2" data-member="omar" style="--x: 28%; --y: 49%" aria-label="عمر">
-          <span class="pulse"></span><span class="avatar avatar-omar">ع</span><b>عمر</b>
-        </button>
-        <button class="person-pin pin-3" data-member="mama" style="--x: 72%; --y: 55%" aria-label="ماما">
-          <span class="pulse"></span><span class="avatar avatar-mama">م</span><b>ماما</b>
-        </button>
+        <div class="accuracy-badge" id="accuracyBadge" hidden><span></span><strong>موقعك</strong><small id="accuracyText">جارٍ تحديد الدقة…</small></div>
 
         <div class="map-brand">Google <strong>Maps</strong></div>
       </section>
 
       <section class="content-panel">
         <div class="panel-head">
-          <div><p class="eyebrow">العائلة الآن</p><h1>الجميع بخير <span>♡</span></h1></div>
-          <button class="add-btn" id="addMemberBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> إضافة فرد</button>
+          <div><p class="eyebrow">دائرة العائلة</p><h1 id="familyTitle">ابدأ بإضافة عائلتك</h1></div>
+          <button class="add-btn" id="addMemberBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> إضافة شخص</button>
         </div>
 
-        <div class="member-strip" id="memberStrip">
-          <button class="member-card selected" data-member="sara">
-            <span class="avatar-wrap online"><span class="avatar avatar-sara">س</span></span>
-            <span class="member-copy"><strong>سارة</strong><small><i></i> في المنزل</small></span>
-            <span class="battery"><svg viewBox="0 0 24 24"><path d="M4 8h14v9H4zM20 11v3"/></svg> ٨٢٪</span>
-          </button>
-          <button class="member-card" data-member="omar">
-            <span class="avatar-wrap moving"><span class="avatar avatar-omar">ع</span></span>
-            <span class="member-copy"><strong>عمر</strong><small><i></i> في الطريق</small></span>
-            <span class="battery"><svg viewBox="0 0 24 24"><path d="M4 8h14v9H4zM20 11v3"/></svg> ٦٤٪</span>
-          </button>
-          <button class="member-card" data-member="mama">
-            <span class="avatar-wrap online"><span class="avatar avatar-mama">م</span></span>
-            <span class="member-copy"><strong>ماما</strong><small><i></i> نادي الجزيرة</small></span>
-            <span class="battery low"><svg viewBox="0 0 24 24"><path d="M4 8h14v9H4zM20 11v3"/></svg> ٢١٪</span>
-          </button>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-visual">
+            <span class="empty-ring ring-one"></span><span class="empty-ring ring-two"></span>
+            <img src="qareeb-logo.png" alt="" />
+          </div>
+          <h2>لا يوجد أفراد حتى الآن</h2>
+          <p>أضف شخصاً تثق به وأرسل له دعوة خاصة. سيظهر موقعه هنا فقط بعد موافقته على المشاركة.</p>
+          <button class="primary-empty" id="emptyAddBtn"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M19 8v6M16 11h6"/></svg> إضافة أول شخص</button>
+          <div class="privacy-note"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> المشاركة اختيارية ويمكن إيقافها في أي وقت</div>
         </div>
 
-        <div class="detail-grid">
-          <article class="activity-card">
-            <div class="card-title"><div><p class="eyebrow">آخر تحديثات سارة</p><h2>نشاط اليوم</h2></div><button id="historyBtn">عرض الكل</button></div>
-            <div class="timeline">
-              <div class="timeline-item current"><span class="time">الآن</span><span class="timeline-dot"><i></i></span><div><strong>في المنزل</strong><small>داخل المنطقة الآمنة</small></div></div>
-              <div class="timeline-item"><span class="time">٣:٤٢ م</span><span class="timeline-dot car"><svg viewBox="0 0 24 24"><path d="m5 11 2-5h10l2 5M4 11h16v6H4zM7 17v2M17 17v2"/></svg></span><div><strong>غادرت الجامعة</strong><small>رحلة مدتها ٢٨ دقيقة</small></div></div>
-              <div class="timeline-item"><span class="time">٨:١٥ ص</span><span class="timeline-dot"><i></i></span><div><strong>وصلت إلى الجامعة</strong><small>جامعة القاهرة</small></div></div>
-            </div>
+        <div class="family-content" id="familyContent" hidden>
+          <div class="member-strip" id="memberStrip"></div>
+          <article class="pending-card">
+            <div class="pending-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div><p class="eyebrow">بانتظار الموافقة</p><h2 id="pendingName">—</h2><span>تم إرسال الدعوة. سيظهر الموقع بعد قبول الشخص وموافقته على مشاركة موقعه.</span></div>
+            <button id="shareAgainBtn">مشاركة الدعوة</button>
           </article>
-
-          <aside class="place-card">
-            <div class="place-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7M5 10v10h14V10M9 20v-6h6v6"/></svg></div>
-            <div><p class="eyebrow">المكان الحالي</p><h2>المنزل</h2><span>شارع النيل، الدقي</span></div>
-            <dl><div><dt>آخر تحديث</dt><dd>منذ دقيقة</dd></div><div><dt>دقة الموقع</dt><dd class="good">ممتازة · ١٢ م</dd></div></dl>
-            <button class="route-btn" id="routeBtn"><svg viewBox="0 0 24 24"><path d="m14 5 5 5-5 5M19 10H8a4 4 0 0 0-4 4v5"/></svg> الاتجاهات عبر Google Maps</button>
-          </aside>
         </div>
       </section>
     </main>
@@ -120,6 +94,7 @@
       <h2 id="modalTitle">أضف فرداً من العائلة</h2>
       <p>أرسل دعوة خاصة. لن يظهر الموقع إلا بعد موافقة الشخص، ويمكنه إيقاف المشاركة في أي وقت.</p>
       <label>الاسم<input id="inviteName" placeholder="مثال: أحمد" maxlength="24" /></label>
+      <label>رقم الهاتف<input id="invitePhone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" maxlength="18" dir="ltr" /></label>
       <button class="primary-btn" id="createInviteBtn">إنشاء رابط دعوة آمن</button>
       <div class="invite-result" id="inviteResult" hidden><small>رابط الدعوة</small><div><code id="inviteCode"></code><button id="copyInviteBtn">نسخ</button></div></div>
     </section>
