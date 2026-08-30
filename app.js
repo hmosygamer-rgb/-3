@@ -44,13 +44,18 @@ function renderFamily() {
   $('#emptyState').hidden = hasPerson;
   $('#familyContent').hidden = !hasPerson;
   $('#memberCount').textContent = hasPerson ? '١' : '٠';
-  $('#familyTitle').textContent = hasPerson ? 'دعوة واحدة معلّقة' : 'ابدأ بإضافة عائلتك';
+  $('#familyTitle').textContent = hasPerson ? (pendingInvite.accepted ? 'فرد واحد متصل' : 'دعوة واحدة معلّقة') : 'ابدأ بإضافة عائلتك';
   if (!hasPerson) return;
+  const accepted = Boolean(pendingInvite.accepted);
   const initial = (pendingInvite.name.trim().charAt(0) || '؟').replace(/[<>&"']/g, '');
   $('#pendingName').textContent = pendingInvite.name;
+  $('#inviteStatusLabel').textContent = accepted ? 'تم قبول الدعوة' : 'بانتظار الموافقة';
+  $('#inviteStatusText').textContent = accepted ? 'تم ربط الشخص بعائلتك تلقائياً. سيظهر موقعه عند بدء مشاركة الموقع.' : 'تم إرسال الدعوة. سيظهر الموقع بعد قبول الشخص وموافقته على مشاركة موقعه.';
+  $('#shareAgainBtn').hidden = accepted;
+  document.querySelector('.pending-card').classList.toggle('accepted-card', accepted);
   $('#memberStrip').innerHTML = `<div class="member-card selected pending-member">
-    <span class="avatar-wrap waiting"><span class="avatar avatar-new">${initial}</span></span>
-    <span class="member-copy"><strong>${pendingInvite.name.replace(/[<>]/g, '')}</strong><small><i></i> بانتظار الموافقة</small></span>
+    <span class="avatar-wrap ${accepted ? 'online' : 'waiting'}"><span class="avatar avatar-new">${initial}</span></span>
+    <span class="member-copy"><strong>${pendingInvite.name.replace(/[<>]/g, '')}</strong><small><i></i> ${accepted ? 'تم الاتصال' : 'بانتظار الموافقة'}</small></span>
     <button class="remove-person" id="removePersonBtn" aria-label="حذف الدعوة">×</button>
   </div>`;
   $('#removePersonBtn').addEventListener('click', () => {
@@ -162,13 +167,13 @@ function acceptQr(data) {
     const url = new URL(data);
     if (url.hostname !== 'qareeb.app' || !url.pathname.startsWith('/join/')) throw new Error();
     const token = url.pathname.split('/').filter(Boolean)[1];
-    if (!token || token.length < 4) throw new Error();
+    if (!/^[A-Z0-9]{6}$/.test(token || '')) throw new Error();
     const name = (url.searchParams.get('name') || 'شخص جديد').slice(0, 24);
-    pendingInvite = { name, phone: '', token, createdAt: Date.now(), scanned: true };
+    pendingInvite = { name, phone: '', token, createdAt: Date.now(), scanned: true, accepted: true, acceptedAt: Date.now() };
     localStorage.setItem('qareeb-pending-invite', JSON.stringify(pendingInvite));
     renderFamily();
     stopScanner();
-    toast(`تمت إضافة ${name}، بانتظار الموافقة`);
+    toast(`تم قبول دعوة ${name} وإضافته تلقائياً`);
     return true;
   } catch { toast('هذا الرمز ليس دعوة صالحة من تطبيق قريب'); return false; }
 }
