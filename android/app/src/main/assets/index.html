@@ -54,7 +54,10 @@
       <section class="content-panel">
         <div class="panel-head">
           <div><p class="eyebrow">دائرة العائلة</p><h1 id="familyTitle">ابدأ بإضافة عائلتك</h1></div>
-          <button class="add-btn" id="addMemberBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> إضافة شخص</button>
+          <div class="family-actions">
+            <button class="scan-btn" id="scanQrBtn"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5M8 8h3v3H8zM14 8h2M14 11h3M8 14h2M13 14h3v3h-3z"/></svg> مسح QR</button>
+            <button class="add-btn" id="addMemberBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> إضافة شخص</button>
+          </div>
         </div>
 
         <div class="empty-state" id="emptyState">
@@ -101,11 +104,35 @@
       <label>الاسم<input id="inviteName" placeholder="مثال: أحمد" maxlength="24" /></label>
       <label>رقم الهاتف<input id="invitePhone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" maxlength="18" dir="ltr" /></label>
       <button class="primary-btn" id="createInviteBtn">إنشاء رابط دعوة آمن</button>
-      <div class="invite-result" id="inviteResult" hidden><small>رابط الدعوة</small><div><code id="inviteCode"></code><button id="copyInviteBtn">نسخ</button></div></div>
+      <div class="invite-result" id="inviteResult" hidden>
+        <div class="qr-preview" id="qrPreview" aria-label="رمز QR للدعوة"></div>
+        <small>وجّه كاميرا الشخص إلى الرمز أو شارك الرابط</small>
+        <div><code id="inviteCode"></code><button id="copyInviteBtn">مشاركة</button></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="scannerBackdrop" hidden>
+    <section class="modal scanner-modal" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
+      <button class="modal-close" id="scannerClose" aria-label="إغلاق">×</button>
+      <p class="eyebrow">إضافة سريعة وآمنة</p>
+      <h2 id="scannerTitle">مسح رمز QR</h2>
+      <p>امسح رمز دعوة قريب لإضافة الشخص. لا يتم قبول أي رموز أو روابط أخرى.</p>
+      <div class="camera-frame" id="cameraFrame">
+        <video id="qrVideo" playsinline muted></video>
+        <div class="scan-corners"><i></i><i></i><i></i><i></i></div>
+        <span id="cameraStatus">جارٍ تشغيل الكاميرا…</span>
+      </div>
+      <canvas id="qrCanvas" hidden></canvas>
+      <label class="image-scan-btn" for="qrImageInput"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 13l3-3 5 6M15 11l2-2 3 3"/><circle cx="8" cy="9" r="1"/></svg> اختيار صورة QR من الهاتف</label>
+      <input id="qrImageInput" type="file" accept="image/*" hidden />
+      <div class="scanner-security"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.7 2.8 8.3 7 10 4.2-1.7 7-5.3 7-10V6l-7-3Z"/></svg> تتم القراءة على جهازك ولا تُرفع الصورة إلى الإنترنت</div>
     </section>
   </div>
 
   <div class="toast" id="toast" role="status"></div>
+  <script src="vendor/qrcode.js"></script>
+  <script src="vendor/jsQR.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

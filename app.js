@@ -9,6 +9,23 @@ const $ = selector => document.querySelector(selector);
 let pendingInvite = JSON.parse(localStorage.getItem('qareeb-pending-invite') || 'null');
 let locationWatch = null;
 let lastLocation = null;
+let cameraStream = null;
+let scannerFrame = null;
+
+function inviteUrl(invite) {
+  return `https://qareeb.app/join/${invite.token}?name=${encodeURIComponent(invite.name)}`;
+}
+
+function drawInviteQr(invite) {
+  const holder = $('#qrPreview');
+  holder.innerHTML = '';
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(inviteUrl(invite));
+    qr.make();
+    holder.innerHTML = qr.createImgTag(7, 0, `دعوة ${invite.name}`);
+  } catch { holder.textContent = 'تعذر إنشاء الرمز'; }
+}
 
 function toast(message) {
   const el = $('#toast');
@@ -29,7 +46,7 @@ function renderFamily() {
   $('#memberCount').textContent = hasPerson ? '١' : '٠';
   $('#familyTitle').textContent = hasPerson ? 'دعوة واحدة معلّقة' : 'ابدأ بإضافة عائلتك';
   if (!hasPerson) return;
-  const initial = pendingInvite.name.trim().charAt(0) || '؟';
+  const initial = (pendingInvite.name.trim().charAt(0) || '؟').replace(/[<>&"']/g, '');
   $('#pendingName').textContent = pendingInvite.name;
   $('#memberStrip').innerHTML = `<div class="member-card selected pending-member">
     <span class="avatar-wrap waiting"><span class="avatar avatar-new">${initial}</span></span>
@@ -102,7 +119,7 @@ $('#addMemberBtn').addEventListener('click', showInvite);
 $('#emptyAddBtn').addEventListener('click', showInvite);
 $('#modalClose').addEventListener('click', () => $('#modalBackdrop').hidden = true);
 $('#modalBackdrop').addEventListener('click', event => { if (event.target === $('#modalBackdrop')) $('#modalBackdrop').hidden = true; });
-document.addEventListener('keydown', event => { if (event.key === 'Escape') $('#modalBackdrop').hidden = true; });
+document.addEventListener('keydown', event => { if (event.key === 'Escape') { $('#modalBackdrop').hidden = true; stopScanner(); } });
 
 $('#createInviteBtn').addEventListener('click', () => {
   const name = $('#inviteName').value.trim();
@@ -112,14 +129,15 @@ $('#createInviteBtn').addEventListener('click', () => {
   const token = Math.random().toString(36).slice(2, 8).toUpperCase();
   pendingInvite = { name, phone, token, createdAt: Date.now() };
   localStorage.setItem('qareeb-pending-invite', JSON.stringify(pendingInvite));
-  $('#inviteCode').textContent = `qareeb.app/join/${token}`;
+  $('#inviteCode').textContent = inviteUrl(pendingInvite).replace('https://', '');
+  drawInviteQr(pendingInvite);
   $('#inviteResult').hidden = false;
   renderFamily();
 });
 
 async function shareInvite() {
   if (!pendingInvite) return;
-  const url = `https://qareeb.app/join/${pendingInvite.token}`;
+  const url = inviteUrl(pendingInvite);
   const text = `${pendingInvite.name}، أدعوك لمشاركة موقعك معي بأمان عبر تطبيق قريب.`;
   try {
     if (navigator.share) await navigator.share({ title: 'دعوة قريب', text, url });
@@ -129,6 +147,68 @@ async function shareInvite() {
 
 $('#copyInviteBtn').addEventListener('click', shareInvite);
 $('#shareAgainBtn').addEventListener('click', shareInvite);
+
+function stopScanner() {
+  cancelAnimationFrame(scannerFrame);
+  scannerFrame = null;
+  cameraStream?.getTracks().forEach(track => track.stop());
+  cameraStream = null;
+  $('#qrVideo').srcObject = null;
+  $('#scannerBackdrop').hidden = true;
+}
+
+function acceptQr(data) {
+  try {
+    const url = new URL(data);
+    if (url.hostname !== 'qareeb.app' || !url.pathname.startsWith('/join/')) throw new Error();
+    const token = url.pathname.split('/').filter(Boolean)[1];
+    if (!token || token.length < 4) throw new Error();
+    const name = (url.searchParams.get('name') || 'شخص جديد').slice(0, 24);
+    pendingInvite = { name, phone: '', token, createdAt: Date.now(), scanned: true };
+    localStorage.setItem('qareeb-pending-invite', JSON.stringify(pendingInvite));
+    renderFamily();
+    stopScanner();
+    toast(`تمت إضافة ${name}، بانتظار الموافقة`);
+    return true;
+  } catch { toast('هذا الرمز ليس دعوة صالحة من تطبيق قريب'); return false; }
+}
+
+function scanPixels(source, width, height) {
+  const canvas = $('#qrCanvas');
+  const max = 900, scale = Math.min(1, max / Math.max(width, height));
+  canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.drawImage(source, 0, 0, canvas.width, canvas.height);
+  const image = context.getImageData(0, 0, canvas.width, canvas.height);
+  return window.jsQR?.(image.data, image.width, image.height, { inversionAttempts: 'attemptBoth' });
+}
+
+async function startScanner() {
+  $('#scannerBackdrop').hidden = false;
+  $('#cameraStatus').textContent = 'جارٍ تشغيل الكاميرا…';
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    const video = $('#qrVideo'); video.srcObject = cameraStream; await video.play();
+    $('#cameraStatus').textContent = 'ضع رمز QR داخل الإطار';
+    const tick = () => {
+      if (!cameraStream) return;
+      if (video.readyState >= 2) { const result = scanPixels(video, video.videoWidth, video.videoHeight); if (result?.data && acceptQr(result.data)) return; }
+      scannerFrame = requestAnimationFrame(tick);
+    };
+    tick();
+  } catch { $('#cameraStatus').textContent = 'اسمح باستخدام الكاميرا أو اختر صورة'; toast('يلزم إذن الكاميرا لمسح الرمز'); }
+}
+
+$('#scanQrBtn').addEventListener('click', startScanner);
+$('#scannerClose').addEventListener('click', stopScanner);
+$('#scannerBackdrop').addEventListener('click', event => { if (event.target === $('#scannerBackdrop')) stopScanner(); });
+$('#qrImageInput').addEventListener('change', async event => {
+  const file = event.target.files?.[0]; if (!file) return;
+  try { const image = await createImageBitmap(file); const result = scanPixels(image, image.width, image.height); image.close(); if (result?.data) acceptQr(result.data); else toast('لم يتم العثور على رمز QR واضح في الصورة'); }
+  catch { toast('تعذر قراءة هذه الصورة'); }
+  event.target.value = '';
+});
+
 $('#permissionsBtn').addEventListener('click', async () => {
   if (window.AndroidApp?.requestAllPermissions) {
     window.AndroidApp.requestAllPermissions();

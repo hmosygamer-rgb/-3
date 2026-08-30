@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import android.view.View;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -23,7 +24,9 @@ public class MainActivity extends Activity {
     private static final int LOCATION_REQUEST = 42;
     private static final int APP_PERMISSIONS_REQUEST = 43;
     private static final int BACKGROUND_LOCATION_REQUEST = 44;
+    private static final int CAMERA_REQUEST = 45;
     private WebView webView;
+    private PermissionRequest webPermissionRequest;
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
 
@@ -63,6 +66,10 @@ public class MainActivity extends Activity {
                     requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST);
                 }
             }
+            @Override public void onPermissionRequest(PermissionRequest request) {
+                if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) request.grant(request.getResources());
+                else { webPermissionRequest = request; requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST); }
+            }
         });
         if (state == null) webView.loadUrl("file:///android_asset/index.html");
         else webView.restoreState(state);
@@ -91,6 +98,8 @@ public class MainActivity extends Activity {
 
     private void requestRelevantPermissions() {
         ArrayList<String> permissions = new ArrayList<>();
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+            permissions.add(Manifest.permission.CAMERA);
         if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
@@ -122,6 +131,11 @@ public class MainActivity extends Activity {
             geoOrigin = null;
         }
         if (requestCode == APP_PERMISSIONS_REQUEST) requestBackgroundLocation();
+        if (requestCode == CAMERA_REQUEST && webPermissionRequest != null) {
+            if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) webPermissionRequest.grant(webPermissionRequest.getResources());
+            else webPermissionRequest.deny();
+            webPermissionRequest = null;
+        }
     }
 
     @Override public void onBackPressed() {
