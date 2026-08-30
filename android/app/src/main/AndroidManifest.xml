@@ -6,7 +6,8 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/qareeb_logo"
+        android:roundIcon="@drawable/qareeb_logo"
         android:label="قريب"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
